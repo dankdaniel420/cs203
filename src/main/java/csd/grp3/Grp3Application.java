@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.client.RestTemplate;
 
 import csd.grp3.user.UserRepository;
 import csd.grp3.tournament.Tournament;
@@ -56,4 +58,9 @@ public class Grp3Application {
 		t2.setStartDateTime(LocalDateTime.of(2024, 12, 31, 15, 0));
 		Ts.addTournament(t2);
 	}
+
+	@Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 }

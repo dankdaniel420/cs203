@@ -1,0 +1,131 @@
+### Analyze Data - Valid Case
+POST http://localhost:8081/cheaterbug/analysis
+Content-Type: application/json
+
+[
+    {
+        "expectedScore": 0.7,
+        "actualScore": 1.0
+    },
+    {
+        "expectedScore": 0.3,
+        "actualScore": 0.0
+    }
+]
+
+
+### Analyze Data - Edge Case
+POST http://localhost:8081/cheaterbug/analysis
+Content-Type: application/json
+
+[
+    {
+        "expectedScore": 1.0,
+        "actualScore": 1.0
+    },
+    {
+        "expectedScore": 0.0,
+        "actualScore": 0.0
+    }
+]
+
+
+### Analyze Data - Out of Range Scores
+POST http://localhost:8081/cheaterbug/analysis
+Content-Type: application/json
+
+[
+    {
+        "expectedScore": 1.5,
+        "actualScore": -0.2
+    },
+    {
+        "expectedScore": -0.1,
+        "actualScore": 1.1
+    }
+]
+
+
+### Analyze Data - Missing Fields
+POST http://localhost:8081/cheaterbug/analysis
+Content-Type: application/json
+
+[
+    {
+        "actualScore": 1.0
+    },
+    {
+        "expectedScore": 0.5
+    }
+]
+
+
+### Analyze Data - Suspicious Cheating Case
+POST http://localhost:8081/cheaterbug/analysis
+Content-Type: application/json
+
+[
+    {
+        "expectedScore": 0.02,
+        "actualScore": 1.0
+    },
+    {
+        "expectedScore": 0.05,
+        "actualScore": 1.0
+    }
+]
+
+
+### Analyze Data - Empty Array
+POST http://localhost:8081/cheaterbug/analysis
+Content-Type: application/json
+
+[]
+
+
+### Analyze Data - Large Dataset
+POST http://localhost:8081/cheaterbug/analysis
+Content-Type: application/json
+
+[
+    {
+        "expectedScore": 0.6,
+        "actualScore": 0.8
+    },
+    {
+        "expectedScore": 0.2,
+        "actualScore": 0.0
+    },
+    {
+        "expectedScore": 0.4,
+        "actualScore": 1.0
+    },
+    {
+        "expectedScore": 0.1,
+        "actualScore": 0.0
+    },
+    {
+        "expectedScore": 0.9,
+        "actualScore": 1.0
+    },
+    {
+        "expectedScore": 0.5,
+        "actualScore": 0.5
+    },
+    {
+        "expectedScore": 0.6,
+        "actualScore": 1.0
+    },
+    {
+        "expectedScore": 0.3,
+        "actualScore": 0.0
+    },
+    {
+        "expectedScore": 0.2,
+        "actualScore": 0.1
+    },
+    {
+        "expectedScore": 0.4,
+        "actualScore": 0.9
+    }
+]
