@@ -272,6 +272,7 @@ public class TournamentServiceImpl implements TournamentService {
             if (UTService.getPlayers(tournamentID).size() < 3) {
                 endTournament(tournamentID);
             }
+            UTService.delete(tournament, user);
             return;
         }
 
@@ -534,7 +535,7 @@ public class TournamentServiceImpl implements TournamentService {
             // assume user1 is white
             boolean isUser1White = isNextColourWhite(user1, tournament);
 
-            for (int j = i + 1; j < users.size() - 1; j++) {
+            for (int j = i + 1; j < users.size(); j++) {
                 User user2 = users.get(j);
 
                 if (pairedUsers.contains(user2))
@@ -686,6 +687,11 @@ public class TournamentServiceImpl implements TournamentService {
                     matches.remove(match);
                     break;
                 }
+                if (userColour.equals("black")) {
+                    match.setBlack(userService.findByUsername("DEFAULT_BOT"));
+                } else {
+                    match.setWhite(userService.findByUsername("DEFAULT_BOT"));
+                }
                 match.setResult(userColour.equals("black") ? 1 : -1);
                 match.setBYE(true);
                 break;
@@ -778,7 +784,6 @@ public class TournamentServiceImpl implements TournamentService {
         List<Match> matches = matchService.getUserMatches(user).stream()
                 .filter(match -> match.getTournament().equals(tournament))
                 .collect(Collectors.toList());
-        // System.out.println("Matches: "+matches);
         for (Match match : matches) {
             // void match results as both users didnt play tgt
             if (match.isBYE())
@@ -806,7 +811,6 @@ public class TournamentServiceImpl implements TournamentService {
 
         expectedActualScore.put("expected", expectedScore);
         expectedActualScore.put("actual", actualScore);
-        // System.out.println("In Match: "+expectedActualScore);
         return expectedActualScore;
     }
 
@@ -820,7 +824,6 @@ public class TournamentServiceImpl implements TournamentService {
         Tournament tournament = getTournament(tournamentID);
         for (User user : UTService.getPlayers(tournamentID)) {
             List<Map<String, Double>> userExpectedActualScores = getUserExpectedActualScoreInTournament(tournament, user);
-            System.out.println("User: "+ user.getUsername() + " User Expected Actual: "+userExpectedActualScores);
             if (!user.getUsername().equals("DEFAULT_BOT") && checkCheaterbug(userExpectedActualScores)) {
                 user.setSuspicious(true);
                 userService.updateSuspicious(user, true);
@@ -834,14 +837,35 @@ public class TournamentServiceImpl implements TournamentService {
      * @param userExpectedActualScores List of maps of expected and actual scores
      */
     public boolean checkCheaterbug(List<Map<String, Double>> userExpectedActualScores) {
-        System.out.println("CHECKING CHEATERBUG");
-        System.out.println("User Expected Actual: "+userExpectedActualScores);
         List<CheaterbugEntity> cheaterbugEntities = new ArrayList<>();
         for (Map<String, Double> scoreMap : userExpectedActualScores) {
             cheaterbugEntities.add(new CheaterbugEntity(scoreMap.get("actual"), scoreMap.get("expected")));
         }
-        System.out.println("Cheat Entities: "+cheaterbugEntities);
-        System.out.println(cheaterbugService.analyze(cheaterbugEntities));
         return cheaterbugService.isSuspicious(cheaterbugService.analyze(cheaterbugEntities));
+    }
+
+    @Override
+    @Transactional
+    public void deleteForUser(User tempUser) {
+        User user = userService.findByUsername(tempUser.getUsername());
+        System.out.println("DELETE For User: "+user.getUsername());
+        // Collect the UserTournament IDs to be deleted
+        List<UserTournament> userTournamentsToDelete = new ArrayList<>(user.getUserTournaments());
+
+        // Now iterate over the collected UserTournament list
+        for (UserTournament userTournament : userTournamentsToDelete) {
+            // Perform the deletion logic, which may include setting the tournament
+            System.out.println("Withdraw from tourn id; "+userTournament.getTournament().getId());
+            withdrawUser(user,userTournament.getTournament().getId());
+            // UTService.delete(userTournament.getTournament(), userTournament.getUser()); // Adjust according to your service
+        }
+
+        // Now delete the user matches
+        List<Match> matchesToDelete = new ArrayList<>(matchService.getUserMatches(user));
+        for (Match match : matchesToDelete) {
+            matchService.deleteMatch(match.getId());
+        }
+
+        userService.deleteByUsername(user.getUsername());
     }
 }

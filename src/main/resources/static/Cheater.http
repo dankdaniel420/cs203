@@ -6,5 +6,9 @@ Content-Type: application/json
 }
 
 ### Delete User - success
-DELETE https://localhost:8443/profile/User120
+DELETE https://localhost:8443/tournaments/user
 Content-Type: application/json
+    
+{
+    "username": "User100"
+}

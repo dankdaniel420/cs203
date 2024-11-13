@@ -1,5 +1,6 @@
 import { apiRequest } from './ApiUtils';
 import { fetchCallback, getHomePage, successCallback } from './SuccessCallback';
+import { handleDeleteUser } from './UserUtils';
 
 export const handleAddTournament = async (tournamentData, setErrorMessage, navigate) => {
     await apiRequest({
@@ -124,6 +125,17 @@ export const handleWithdraw = async (title, tournamentId, userData, setErrorMess
         setErrorMessage,
     });
 };
+
+export const handleDeleteForUser = async (userData, tournamentId, setErrorMessage, setStandings) => {
+    await apiRequest({
+        url: `${process.env.REACT_APP_API_URL}/tournaments/user`,
+        method: 'DELETE',
+        body: userData,
+        callback: successCallback(`${userData.username}'s account has been deleted.`, () => fetchStandings(tournamentId, setErrorMessage, setStandings)),
+        setErrorMessage,
+    });
+};
+
 
 export const handleDeleteTournament = async (title, tournamentId, setErrorMessage, setTournaments) => {
     await apiRequest({

@@ -101,4 +101,10 @@ public class TournamentController {
         List<Tournament> t = tournamentService.getHistoryByUser(username);
         return new ResponseEntity<List<Tournament>>(t, HttpStatus.OK);
     }
+
+    @DeleteMapping("/user")
+    public ResponseEntity<HttpStatus> deleteUser(@RequestBody User user) {
+        tournamentService.deleteForUser(user);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

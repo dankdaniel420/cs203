@@ -80,6 +80,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/signup", "/login").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/user/flag").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/profile/*").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/tournaments/user").permitAll()
 
                         // Admin-only access
                         .requestMatchers(HttpMethod.GET, "/tournaments").hasRole("ADMIN")
