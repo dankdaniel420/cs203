@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import csd.grp3.CheaterBugAPI.*;
+import csd.grp3.user.User;
 
 @SpringBootTest
 public class CheaterbugServiceIntegrationTest {
@@ -110,5 +111,37 @@ public class CheaterbugServiceIntegrationTest {
         CheaterbugResponse response = cheaterbugService.analyze(requestPayload);
         assertNotNull(response);
         assertFalse(cheaterbugService.isSuspicious(response), "Expected no suspicion with uniformly low actual scores.");
+    }
+
+    @Test
+    public void testAnalyze_WithEloScores_isSus() {
+        // Prepare the input data (a list of users objects with elo)
+        User user = new User("player1", "password1", "ROLE_PLAYER", 100);
+        User opp1 = new User("player3", "password3", "ROLE_PLAYER", 120);
+        // User opp2 = new User("player5", "password5", "ROLE_PLAYER", 130);
+        // User opp3 = new User("player2", "password2", "ROLE_PLAYER", 140);
+        // User opp4 = new User("player4", "password4", "ROLE_PLAYER", 150);
+        // User opp5 = new User("player6", "password6", "ROLE_PLAYER", 200);
+        User opp6 = new User("player7", "password7", "ROLE_PLAYER", 220);
+        // User opp7 = new User("player8", "password8", "ROLE_PLAYER", 240);
+        User opp8 = new User("player9", "password9", "ROLE_PLAYER", 260);
+        User opp9 = new User("player10", "password10", "ROLE_PLAYER", 280);
+ 
+        List<CheaterbugEntity> requestPayload = List.of(
+            new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp1.getELO() - user.getELO()) / 200.0))),
+            new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp8.getELO() - user.getELO()) / 200.0))),
+            new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp6.getELO() - user.getELO()) / 200.0))),
+            new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp9.getELO() - user.getELO()) / 200.0))),
+            new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp9.getELO() - user.getELO()) / 200.0))),
+            new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp8.getELO() - user.getELO()) / 200.0)))
+            // new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp7.getELO() - user.getELO()) / 200.0))),
+            // new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp8.getELO() - user.getELO()) / 200.0))),
+            // new CheaterbugEntity(1.0, 1.0 / (1 + Math.pow(10, (opp9.getELO() - user.getELO()) / 200.0)))
+        );
+
+        // Call the service method and check results
+        CheaterbugResponse response = cheaterbugService.analyze(requestPayload);
+        assertNotNull(response);
+        assertTrue(cheaterbugService.isSuspicious(response));
     }
 }

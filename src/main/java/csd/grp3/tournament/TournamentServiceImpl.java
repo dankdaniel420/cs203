@@ -536,6 +536,27 @@ public class TournamentServiceImpl implements TournamentService {
             for (int j = i + 1; j < users.size(); j++) {
                 User user2 = users.get(j);
 
+                if (j == users.size() - 1) {
+                    if (pairedUsers.contains(user2)) {
+                        for (int k = i + 1; k < users.size(); k++) {
+                            User desperateUser = users.get(k);
+                            if (!pairedUsers.contains(desperateUser)) {
+                                Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", desperateUser, round);
+                                matches.add(newPair);
+                                pairedUsers.add(user1);
+                                pairedUsers.add(desperateUser);
+                                break;
+                            }
+                        }
+                    } else {
+                        Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", user2, round);
+                        matches.add(newPair);
+                        pairedUsers.add(user1);
+                        pairedUsers.add(user2);
+                    }
+                    break;
+                }
+
                 if (pairedUsers.contains(user2))
                     continue;
 
@@ -553,6 +574,16 @@ public class TournamentServiceImpl implements TournamentService {
                 pairedUsers.add(user2);
                 break;
             }
+        }
+
+        //handle odd
+        users.removeAll(pairedUsers);
+        if (users.size() != 0) {
+            User oddUser = users.get(0);
+            Match newPair = createMatchWithUserColour(oddUser, "white", userService.findByUsername("DEFAULT_BOT"), round);
+            newPair.setResult(1.0);
+            newPair.setBYE(true);
+            matches.add(newPair);
         }
     }
 
@@ -654,7 +685,11 @@ public class TournamentServiceImpl implements TournamentService {
         for (User user : UTService.getPlayers(tournamentID)) {
             eloChanges.put(user, calculateChangeInELO(getUserExpectedActualScoreInTournament(tournament, user), getDevelopmentCoefficient(user)));
         }
+        //catch cheaters
+        flagSusUserPerformance(tournamentID);
+
         updateUserEloMap(eloChanges);
+
     }
 
     private void updateUserEloMap(Map<User, Integer> eloChanges) {
@@ -795,7 +830,7 @@ public class TournamentServiceImpl implements TournamentService {
      * @return Map of expected and actual score
      */
     private Map<String, Double> getUserExpectedActualScoreInMatch(Match match, User user) {
-        final Double CLASS_INTERVAL = 100.0;
+        final Double CLASS_INTERVAL = 200.0;
         Map<String, Double> expectedActualScore = new HashMap<>();
         User opponent = match.getWhite().equals(user) ? match.getBlack() : match.getWhite();
         Double expectedScore = 1.0 / (1 + Math.pow(10, (opponent.getELO() - user.getELO()) / CLASS_INTERVAL));
@@ -816,6 +851,10 @@ public class TournamentServiceImpl implements TournamentService {
     public void flagSusUserPerformance(Long tournamentID) {
         Tournament tournament = getTournament(tournamentID);
         for (User user : UTService.getPlayers(tournamentID)) {
+            if (user.getUsername().equals("DEFAULT_BOT")) {
+                continue;
+            }
+
             List<Map<String, Double>> userExpectedActualScores = getUserExpectedActualScoreInTournament(tournament, user);
             if (checkCheaterbug(userExpectedActualScores)) {
                 user.setSuspicious(true);
@@ -834,6 +873,10 @@ public class TournamentServiceImpl implements TournamentService {
         for (Map<String, Double> scoreMap : userExpectedActualScores) {
             cheaterbugEntities.add(new CheaterbugEntity(scoreMap.get("actual"), scoreMap.get("expected")));
         }
+
+        System.out.println(cheaterbugEntities);
+        System.out.println(cheaterbugService.analyze(cheaterbugEntities));
+
         return cheaterbugService.isSuspicious(cheaterbugService.analyze(cheaterbugEntities));
     }
 }

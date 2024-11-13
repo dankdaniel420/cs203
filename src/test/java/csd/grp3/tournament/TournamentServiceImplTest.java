@@ -1146,17 +1146,19 @@ public class TournamentServiceImplTest {
     @Test
     public void testflagSusUserPerformance_true() {
         // Mock data setup
-        User user = new User("player1", "password1", "ROLE_PLAYER", 1000);
-        User opp1 = new User("player2", "password2", "ROLE_PLAYER", 1150);
-        User opp2 = new User("player3", "password3", "ROLE_PLAYER", 1190);
-        User opp3 = new User("player4", "password4", "ROLE_PLAYER", 1100);
-        User opp4 = new User("player5", "password5", "ROLE_PLAYER", 1050);
+        User user = new User("player1", "password1", "ROLE_PLAYER", 100);
+        User opp1 = new User("player2", "password2", "ROLE_PLAYER", 120);
+        User opp2 = new User("player3", "password3", "ROLE_PLAYER", 220);
+        User opp3 = new User("player4", "password4", "ROLE_PLAYER", 260);
+        User opp4 = new User("player5", "password5", "ROLE_PLAYER", 280);
         
         List<Match> matches = List.of(
             new Match(user, opp1, new Round(tournament)), 
-            new Match(user, opp2, new Round(tournament)), 
             new Match(user, opp3, new Round(tournament)), 
-            new Match(user, opp4, new Round(tournament))
+            new Match(user, opp2, new Round(tournament)), 
+            new Match(user, opp4, new Round(tournament)), 
+            new Match(user, opp4, new Round(tournament)),
+            new Match(user, opp3, new Round(tournament))
         );
         matches.forEach(match -> match.setResult(1.0));
 
