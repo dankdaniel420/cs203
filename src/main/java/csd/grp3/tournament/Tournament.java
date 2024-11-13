@@ -17,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,17 +46,21 @@ public class Tournament {
     private String title;
 
     @NotNull(message = "minElo: put a valid Elo")
+    @Min(value = 0, message = "minElo: elo cannot be negative")
     private int minElo;
 
     @NotNull(message = "maxElo: put a valid Elo")
+    @Min(value = 0, message = "maxElo: elo cannot be negative")
     private int maxElo;
 
     private LocalDateTime startDateTime;
 
     @NotNull(message = "size: put a valid tournament size")
+    @Min(value = 2, message = "size: need at least 2 players")
     private int size;
 
     @NotNull(message = "totalRounds: put a valid number of rounds")
+    @Min(value = 1, message = "totalRounds: need at least 1 round")
     private int totalRounds;
 
     private boolean isCalculated = false;
@@ -96,7 +101,7 @@ public class Tournament {
     }
 
     public boolean hasStarted() {
-        return LocalDateTime.now().isAfter(startDateTime) && userTournaments.size() > 2; // 2 Users + 1 Bot 
+        return LocalDateTime.now().isAfter(startDateTime) && userTournaments.size() > 1; // 2 Users + 1 Bot 
     }
 
     // Custom validation method

@@ -269,7 +269,7 @@ public class TournamentServiceImpl implements TournamentService {
             UTService.updatePlayerStatus(tournamentID, user.getUsername(), 'b');
             List<Round> rounds = tournament.getRounds();
             handleBYE(rounds.get(rounds.size() - 1), user); // give opp win for current round
-            if (UTService.getPlayers(tournamentID).size() < 3) {
+            if (UTService.getPlayers(tournamentID).size() < 2) {
                 endTournament(tournamentID);
             }
             UTService.delete(tournament, user);
@@ -538,6 +538,28 @@ public class TournamentServiceImpl implements TournamentService {
             for (int j = i + 1; j < users.size(); j++) {
                 User user2 = users.get(j);
 
+                if (j == users.size() - 1) { 
+                    if (pairedUsers.contains(user2)) { 
+                        for (int k = i + 1; k < users.size(); k++) { 
+                            User desperateUser = users.get(k); 
+                            if (!pairedUsers.contains(desperateUser)) { 
+                                Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", desperateUser, round); 
+                                matches.add(newPair); 
+                                pairedUsers.add(user1); 
+                                pairedUsers.add(desperateUser); 
+                                break; 
+                            } 
+                        } 
+                    } else { 
+                        Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", user2, round); 
+                        matches.add(newPair); 
+                        pairedUsers.add(user1); 
+                        pairedUsers.add(user2); 
+                    } 
+                    break; 
+                }
+
+
                 if (pairedUsers.contains(user2))
                     continue;
 
@@ -555,6 +577,16 @@ public class TournamentServiceImpl implements TournamentService {
                 pairedUsers.add(user2);
                 break;
             }
+        }
+
+        // handle odd number of players
+        users.removeAll(pairedUsers);
+        if (users.size() != 0) {
+            User oddUser = users.get(0);
+            Match newPair = createMatchWithUserColour(oddUser, "white", userService.findByUsername("DEFAULT_BOT"), round);
+            newPair.setResult(1.0);
+            newPair.setBYE(true);
+            matches.add(newPair);
         }
     }
 

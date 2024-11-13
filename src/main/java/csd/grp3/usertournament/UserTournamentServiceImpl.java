@@ -1,5 +1,6 @@
 package csd.grp3.usertournament;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +25,14 @@ public class UserTournamentServiceImpl implements UserTournamentService {
 
     @Override
     public List<User> getPlayers(Long tournamentID) {
-        return userTournamentRepo.findRegisteredUsersByTournamentId(tournamentID);
+        // Get the list of users
+        List<User> users = userTournamentRepo.findRegisteredUsersByTournamentId(tournamentID);
+
+        // Remove the users whose username is "DEFAULT_BOT"
+        users.removeIf(user -> user.getUsername().equals("DEFAULT_BOT"));
+
+        // Return the filtered list
+        return users;
     }
 
     @Override
@@ -64,7 +72,8 @@ public class UserTournamentServiceImpl implements UserTournamentService {
     @Transactional
     public UserTournament add(Tournament tournament, User user, char status) {
         // Check if the UserTournament already exists
-        Optional<UserTournament> existinguserTournament = userTournamentRepo.findById_TournamentIdAndId_Username(tournament.getId(),
+        Optional<UserTournament> existinguserTournament = userTournamentRepo.findById_TournamentIdAndId_Username(
+                tournament.getId(),
                 user.getUsername());
         if (existinguserTournament.isPresent()) {
             return updatePlayerStatus(tournament.getId(), user.getUsername(), status);

@@ -88,10 +88,19 @@ public class Grp3Application {
 		Tournament t2 = new Tournament();
 		t2.setTitle("Tournament C");
 		t2.setSize(3);
+		t2.setMinElo(101);
 		t2.setMaxElo(200);
 		t2.setTotalRounds(3);
 		t2.setStartDateTime(LocalDateTime.of(2024, 12, 31, 15, 0));
 		Ts.addTournament(t2);
+		Tournament t3 = new Tournament();
+		t3.setTitle("Tournament D");
+		t3.setSize(3);
+		t3.setMinElo(1);
+		t3.setMaxElo(200);
+		t3.setTotalRounds(3);
+		t3.setStartDateTime(LocalDateTime.of(2024, 12, 31, 15, 0));
+		Ts.addTournament(t3);
 	}
 
 	@Bean

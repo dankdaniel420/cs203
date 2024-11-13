@@ -86,8 +86,7 @@ public class TournamentController {
 
     @GetMapping("/{id}/standings")
     public ResponseEntity<List<User>> getStandings(@PathVariable Long id) {
-        List<User> users = tournamentService.getSortedUsers(id);
-        return new ResponseEntity<List<User>>(users.subList(0, users.size() - 1), HttpStatus.OK); // excl bot
+        return new ResponseEntity<List<User>>(tournamentService.getSortedUsers(id), HttpStatus.OK); // excl bot
     }
 
     @GetMapping("/byElo/{elo}")
