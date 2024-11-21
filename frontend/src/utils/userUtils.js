@@ -49,15 +49,6 @@ export const handlePassword = async (userData, setErrorMessage, setNewPassword) 
     });
 };
 
-export const handleDeleteUser = async (userData, tournamentId, setErrorMessage, setStandings) => {
-    await apiRequest({
-        url: `${process.env.REACT_APP_API_URL}/profile/${userData.username}`,
-        method: 'DELETE',
-        callback: successCallback(`${userData.username}'s account has been deleted.`, () => fetchStandings(tournamentId, setErrorMessage, setStandings)),
-        setErrorMessage,
-    });
-};
-
 export const handleUnflagUser = async (userData, tournamentId, setErrorMessage, setStandings) => {
     await apiRequest({
         url: `${process.env.REACT_APP_API_URL}/user/flag`,
