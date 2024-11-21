@@ -36,6 +36,8 @@ import lombok.EqualsAndHashCode;
 public class User implements UserDetails{
     private static final int DEFAULT_ELO = 100;
 
+    private boolean suspicious = false;
+
     @Id @NotNull(message = "Username should not be null")
     private String username;
 
@@ -99,5 +101,7 @@ public class User implements UserDetails{
         return true; // Implement as needed
     }
 
-    
+    public boolean isSuspicious() {
+        return suspicious;
+    }
 }

@@ -2,6 +2,7 @@ package csd.grp3.match;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import csd.grp3.round.Round;
 import csd.grp3.user.User;
@@ -10,6 +11,7 @@ import jakarta.transaction.Transactional;
 @Service
 public class MatchServiceImpl implements MatchService{
 
+    @Autowired
     private MatchRepository matches;
 
     /**

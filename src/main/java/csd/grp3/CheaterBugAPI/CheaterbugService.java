@@ -1,4 +1,4 @@
-package csd.grp3.CheaterBugAPI;
+package csd.grp3.CheaterbugAPI;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -49,25 +49,25 @@ public class CheaterbugService {
         Map<String, String> cheatProbability = response.getCheatProbability();
         Map<String, String> expectedProbability = response.getExpectedProbability();
     
-        // Parse "actual" and "99thPercentile" values from cheatProbability if they are numeric
+        // Parse "actual" and "90thPercentile" values from cheatProbability if they are numeric
         double cheatActual = parseProbabilityOrDefault(cheatProbability.get("actual"));
-        double cheat99thPercentile = parseProbabilityOrDefault(cheatProbability.get("99thPercentile"));
+        double cheat90thPercentile = parseProbabilityOrDefault(cheatProbability.get("90thPercentile"));
 
         // Parse "actual" and "5thPercentile" values from expectedProbability if they are numeric
         double expectedActual = parseProbabilityOrDefault(expectedProbability.get("actual"));
         double expected5thPercentile = parseProbabilityOrDefault(expectedProbability.get("5thPercentile"));
 
         // If either percentile is missing or marked as "Not enough data", return false
-        if (cheat99thPercentile == -1.0 || expected5thPercentile == -1.0) {
+        if (cheat90thPercentile == -1.0 || expected5thPercentile == -1.0) {
             return false;
         }
 
         // Define the conditions for suspicion
-        boolean isCheatAbove99th = cheatActual > cheat99thPercentile;
+        boolean isCheatAbove90th = cheatActual > cheat90thPercentile;
         boolean isExpectedBelow5th = expectedActual < expected5thPercentile;
 
         // Return true if both conditions are met
-        return isCheatAbove99th && isExpectedBelow5th;
+        return isCheatAbove90th && isExpectedBelow5th;
     }
     
     // Helper method to parse probabilities, returning -1.0 if "Not enough data" is encountered

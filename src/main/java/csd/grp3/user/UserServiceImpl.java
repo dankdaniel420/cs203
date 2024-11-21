@@ -1,5 +1,6 @@
 package csd.grp3.user;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import csd.grp3.jwt.JwtService;
 import jakarta.transaction.Transactional;
@@ -17,9 +19,16 @@ import jakarta.transaction.Transactional;
 @Service
 public class UserServiceImpl implements UserService {
 
+    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
     private BCryptPasswordEncoder encoder;
+
+    @Autowired
     private AuthenticationManager authManager;
+
+    @Autowired
     private JwtService jwtService;
 
     /**
@@ -136,6 +145,19 @@ public class UserServiceImpl implements UserService {
     public void updateELO(User tempUser, int ELO) {
         User user = findByUsername(tempUser.getUsername());
         user.setELO(ELO);
+        userRepository.save(user);
+    }
+
+    /**
+     * This method is used to update the suspicious status of a user
+     * 
+     * @param tempUser The user to update the suspicious status
+     * @param suspicious The new suspicious status of the user
+     */
+    @Override
+    public void updateSuspicious(User tempUser, boolean suspicious) {
+        User user = findByUsername(tempUser.getUsername());
+        user.setSuspicious(suspicious);
         userRepository.save(user);
     }
 }

@@ -1,4 +1,4 @@
-package csd.grp3.CheaterBugAPI;
+package csd.grp3.CheaterbugAPI;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,3 +15,4 @@ public class CheaterbugResponse {
     private Map<String,String> cheatProbability;
     private Map<String,String> expectedProbability;
 }
+

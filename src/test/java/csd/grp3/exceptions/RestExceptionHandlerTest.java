@@ -1,5 +1,7 @@
 package csd.grp3.exceptions;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +12,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
@@ -23,10 +27,12 @@ import csd.grp3.match.MatchService;
 import csd.grp3.tournament.InvalidTournamentStatus;
 import csd.grp3.tournament.TournamentNotFoundException;
 import csd.grp3.tournament.TournamentService;
+import csd.grp3.tournament.UserAlreadyRegisteredException;
 import csd.grp3.tournament.UserNotRegisteredException;
 import csd.grp3.user.UserService;
+import csd.grp3.usertournament.UserTournamentNotFoundException;
 
-@WebMvcTest
+@WebMvcTest(RestExceptionHandler.class)
 public class RestExceptionHandlerTest {
     @MockBean
     private MatchService matchService; // Mock the MatchService
@@ -140,5 +146,57 @@ public class RestExceptionHandlerTest {
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(response.getBody().toString().contains("Invalid credentials."));
+    }
+
+    @Test
+    public void testHandleAccessDenied() {
+        // Arrange
+        AccessDeniedException ex = new AccessDeniedException("Access is denied");
+
+        // Act
+        ResponseEntity<Map<String, Object>> response = restExceptionHandler.handleAccessDenied(ex);
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("You do not have permission to access this resource"));
+    }
+
+    @Test
+    public void testHandleAuthentication() {
+        // Arrange
+        AuthenticationException ex = new AuthenticationException("Authentication failed") {};
+
+        // Act
+        ResponseEntity<Map<String, Object>> response = restExceptionHandler.handleAuthentication(ex);
+
+        // Assert
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("You need to be authenticated to access this resource"));
+    }
+
+    @Test
+    public void testHandleUserTournamentNotFoundException() {
+        // Arrange
+        UserTournamentNotFoundException ex = new UserTournamentNotFoundException();
+
+        // Act
+        ResponseEntity<Object> response = restExceptionHandler.handle(ex);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("Tournament entry could not be found"));
+    }
+
+    @Test
+    public void testHandleUserAlreadyRegisteredException() {
+        // Arrange
+        UserAlreadyRegisteredException ex = new UserAlreadyRegisteredException();
+
+        // Act
+        ResponseEntity<Object> response = restExceptionHandler.handleUserAlreadyRegistered(ex);
+
+        // Assert
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("User has already registered for this tournament."));
     }
 }

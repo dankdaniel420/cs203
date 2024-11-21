@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 
 @RestController
+@AllArgsConstructor
 public class UserController {
     private UserService userService;
 
@@ -66,9 +68,9 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
     }
 
-    @DeleteMapping("/profile/{username}")
-    public ResponseEntity<HttpStatus> deleteUser(@PathVariable String username) {
-        userService.deleteByUsername(username);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/user/flag")
+    public ResponseEntity<HttpStatus> unflagUser(@RequestBody User user) {
+        userService.updateSuspicious(user, false);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

@@ -28,4 +28,6 @@ public interface TournamentService {
     void createPairings(Tournament tournament, Round round);
     List<User> getSortedUsers(Long id);
     List<Tournament> getHistoryByUser(String username);
+    void flagSusUserPerformance(Long id);
+    void deleteForUser(User user);
 }

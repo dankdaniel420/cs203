@@ -1,9 +1,12 @@
 ######### Focus: Player and Waiting List
 ### Get all tournaments
-GET http://localhost:8080/tournaments/
+GET http://localhost:8080/tournaments
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdXRob3JpdGllcyI6WyJST0xFX1VTRVIiXSwic3ViIjoiVXNlcjEwMCIsImlhdCI6MTczMTA3NjkzMSwiZXhwIjo2MjMxODc2OTUzNDgyODAwfQ.m8B2281R2y4BoD6BSWiVdiW3z6vwn4-1vmmQLYzymzg
 
 ### Get tourn by ID
 GET http://localhost:8080/tournaments/2
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdXRob3JpdGllcyI6WyJST0xFX1VTRVIiXSwic3ViIjoiVXNlcjEwMCIsImlhdCI6MTczMTA3NjkzMSwiZXhwIjo2MjMxODc2OTUzNDgyODAwfQ.m8B2281R2y4BoD6BSWiVdiW3z6vwn4-1vmmQLYzymzg
 
 ### Get tourn by ID - not found
 GET http://localhost:8080/tournaments/9
@@ -20,18 +23,18 @@ POST http://localhost:8080/tournaments/1/register
 Content-Type: application/json
 
 {
-    "username": "user1",
-    "password": "pass1234",
+    "username": "User110",
+    "password": "user1234",
     "authorities": "ROLE_USER"
 }
 
-## Withdraw from tournament - t started - js remove player no move wait
+### Withdraw from tournament - t started - js remove player no move wait
 DELETE http://localhost:8080/tournaments/1/withdraw
 Content-Type: application/json
 
 {
-    "username": "user1",
-    "password": "pass1234",
+    "username": "User100",
+    "password": "user1234",
     "authorities": "ROLE_USER"
 }
 
@@ -76,7 +79,7 @@ Content-Type: application/json
 }
 
 ### Register for tournament - wait list - check get
-POST http://localhost:8080/tournaments/1/register
+POST  http://localhost:8080/tournaments/1/register
 Content-Type: application/json
 
 {
@@ -149,7 +152,7 @@ Content-Type: application/json
     {
         "id": 3,
         "isBYE": false,
-        "result": 1
+        "result": 0
     }
 ]
 

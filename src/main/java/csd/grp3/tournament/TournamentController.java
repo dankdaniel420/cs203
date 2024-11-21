@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import csd.grp3.round.Round;
 import csd.grp3.user.User;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/tournaments")
 public class TournamentController {
     
@@ -84,8 +86,7 @@ public class TournamentController {
 
     @GetMapping("/{id}/standings")
     public ResponseEntity<List<User>> getStandings(@PathVariable Long id) {
-        List<User> users = tournamentService.getSortedUsers(id);
-        return new ResponseEntity<List<User>>(users.subList(0, users.size() - 1), HttpStatus.OK); // excl bot
+        return new ResponseEntity<List<User>>(tournamentService.getSortedUsers(id), HttpStatus.OK); // excl bot
     }
 
     @GetMapping("/byElo/{elo}")
@@ -98,5 +99,11 @@ public class TournamentController {
     public ResponseEntity<List<Tournament>> getHistoryByUser(@PathVariable String username) {
         List<Tournament> t = tournamentService.getHistoryByUser(username);
         return new ResponseEntity<List<Tournament>>(t, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/user")
+    public ResponseEntity<HttpStatus> deleteUser(@RequestBody User user) {
+        tournamentService.deleteForUser(user);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

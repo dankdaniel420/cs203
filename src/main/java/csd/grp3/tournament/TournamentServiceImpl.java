@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -11,11 +12,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import csd.grp3.CheaterBugAPI.CheaterbugEntity;
-import csd.grp3.CheaterBugAPI.CheaterbugResponse;
-import csd.grp3.CheaterBugAPI.CheaterbugService;
+import csd.grp3.CheaterbugAPI.CheaterbugEntity;
+import csd.grp3.CheaterbugAPI.CheaterbugService;
 import csd.grp3.match.Match;
 import csd.grp3.match.MatchService;
 import csd.grp3.round.Round;
@@ -29,12 +30,23 @@ import jakarta.transaction.Transactional;
 @Service
 public class TournamentServiceImpl implements TournamentService {
 
+    @Autowired
     private TournamentRepository tournaments;
+
+    @Autowired
     private MatchService matchService;
+
+    @Autowired
     private UserTournamentService UTService;
+
+    @Autowired
     private UserService userService;
+
+    @Autowired
     private RoundService roundService;
-    private CheaterbugService CheaterbugService;
+
+    @Autowired
+    private CheaterbugService cheaterbugService;
 
     @Override
     public List<Tournament> listTournaments() {
@@ -50,6 +62,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public Tournament addTournament(Tournament newTournamentInfo) {
+        newTournamentInfo.setSize(newTournamentInfo.getSize() + 1); // space for bot
         tournaments.save(newTournamentInfo);
         registerUser(userService.findByUsername("DEFAULT_BOT"), newTournamentInfo.getId());
         return newTournamentInfo;
@@ -88,7 +101,7 @@ public class TournamentServiceImpl implements TournamentService {
         updateTournamentEloRange(tournament);
 
         // update player and waiting list based on new size
-        tournament.setSize(newTournamentInfo.getSize());
+        tournament.setSize(newTournamentInfo.getSize() + 1); // space for bot
         updateTournamentSize(tournament);
 
         return tournaments.save(tournament);
@@ -137,7 +150,7 @@ public class TournamentServiceImpl implements TournamentService {
      * @param tournamentID Long
      * @param numToAdd int
      */
-    private void addFromWaiting(Long tournamentID, int numToAdd) {
+    public void addFromWaiting(Long tournamentID, int numToAdd) {
         // invite players from waiting list
         Iterator<User> waitingUsers = UTService.getWaitingList(tournamentID).iterator();
 
@@ -257,9 +270,10 @@ public class TournamentServiceImpl implements TournamentService {
             UTService.updatePlayerStatus(tournamentID, user.getUsername(), 'b');
             List<Round> rounds = tournament.getRounds();
             handleBYE(rounds.get(rounds.size() - 1), user); // give opp win for current round
-            if (UTService.getPlayers(tournamentID).size() < 3) {
+            if (UTService.getPlayers(tournamentID).size() < 2) {
                 endTournament(tournamentID);
             }
+            UTService.delete(tournament, user);
             return;
         }
 
@@ -514,6 +528,7 @@ public class TournamentServiceImpl implements TournamentService {
 
         for (int i = 0; i < users.size(); i++) {
             User user1 = users.get(i);
+            User user2 = null;
 
             if (pairedUsers.contains(user1))
                 continue;
@@ -523,26 +538,65 @@ public class TournamentServiceImpl implements TournamentService {
             boolean isUser1White = isNextColourWhite(user1, tournament);
 
             for (int j = i + 1; j < users.size(); j++) {
-                User user2 = users.get(j);
+                user2 = users.get(j);
 
-                if (pairedUsers.contains(user2))
+                if (pairedUsers.contains(user2)
+                    || !directEncounterResultInTournament(tournament, user1, user2).equals("no direct encounter")
+                    || !isColourSuitable(user2, tournament, isUser1White ? "black" : "white"))
                     continue;
+                else {
+                    // if here means user2 fulfils criteria, hence break
+                    break;
+                }
+            }
 
-                // check if users have not played each other in tournament
-                if (!directEncounterResultInTournament(tournament, user1, user2).equals("no direct encounter"))
-                    continue;
+            // handle desperate user - no suitable user2
+            if (user2 == null)
+                user2 = handleDesperateUser(user1, users, pairedUsers);
 
-                // check if user2 can be assigned colour
-                if (!isColourSuitable(user2, tournament, isUser1White ? "black" : "white"))
-                    continue;
+            Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", user2, round);
+            matches.add(newPair);
+            pairedUsers.add(user1);
+            pairedUsers.add(user2);
+        }
 
-                Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", user2, round);
-                matches.add(newPair);
-                pairedUsers.add(user1);
-                pairedUsers.add(user2);
-                break;
+        // handle odd number of players (remainding user)
+        users.removeAll(pairedUsers);
+        if (users.size() != 0) {
+            matches.add(handleOddUser(users.get(0), round));
+        }
+    }
+
+    /**
+     * Handles odd number of users in tournament
+     * Assigns leftover user with default bot
+     * 
+     * @param oddUser User object
+     * @param round Round object
+     * @return Match object with BYE
+     */
+    public Match handleOddUser(User oddUser, Round round) {
+        Match newPair = createMatchWithUserColour(oddUser, "white", userService.findByUsername("DEFAULT_BOT"), round);
+        newPair.setResult(1.0);
+        newPair.setBYE(true);
+        return newPair;
+    }
+
+    /**
+     * Handles desperate user who has no opponents to play with
+     * 
+     * @param desperateUser User object
+     * @param users List of users
+     * @param pairedUsers Set of paired users
+     * @return First unpaired user that is also not user itself, else default bot
+     */
+    public User handleDesperateUser(User desperateUser, List<User> users, Set<User> pairedUsers) {
+        for (User user : users) {
+            if (!pairedUsers.contains(user) && !user.equals(desperateUser)) {
+                return user;
             }
         }
+        return userService.findByUsername("DEFAULT_BOT");
     }
 
     /**
@@ -635,9 +689,26 @@ public class TournamentServiceImpl implements TournamentService {
      */
     @Override
     public void endTournament(Long tournamentID) {
-        Tournament tournament = finalizeTournament(tournamentID);
-        Map<User, List<CheaterbugEntity>> userEntitiesMap = mapUserEntities(tournamentID, tournament);
-        analyzeUserEntities(userEntitiesMap, tournamentID, tournament);
+        Tournament tournament = getTournament(tournamentID);
+        tournament.setCalculated(true);
+        tournaments.save(tournament); // set Calculated
+
+        Map<User, Integer> eloChanges = new HashMap<>();
+        for (User user : UTService.getPlayers(tournamentID)) {
+            eloChanges.put(user, calculateChangeInELO(getUserExpectedActualScoreInTournament(tournament, user), getDevelopmentCoefficient(user)));
+        }
+        // catch cheaters 
+        flagSusUserPerformance(tournamentID);
+        updateUserEloMap(eloChanges);
+    }
+
+    private void updateUserEloMap(Map<User, Integer> eloChanges) {
+        for (Map.Entry<User, Integer> entry : eloChanges.entrySet()) {
+            User user = entry.getKey();
+            Integer eloChange = entry.getValue();
+            user.setELO(user.getELO() + eloChange);
+            userService.updateELO(user, user.getELO());
+        }
     }
 
     /**
@@ -657,6 +728,11 @@ public class TournamentServiceImpl implements TournamentService {
                     matches.remove(match);
                     break;
                 }
+                if (userColour.equals("black")) {
+                    match.setBlack(userService.findByUsername("DEFAULT_BOT"));
+                } else {
+                    match.setWhite(userService.findByUsername("DEFAULT_BOT"));
+                }
                 match.setResult(userColour.equals("black") ? 1 : -1);
                 match.setBYE(true);
                 break;
@@ -665,31 +741,21 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     /**
-     * Calculate user ELO via this formula documentation
-     * https://en.wikipedia.org/wiki/Chess_rating_system#Linear_approximation
-     * Based on difference in expected vs actual score.
-     * Uses a development coefficient, depending on the user's match history, via getDevelopmentCoefficient()
+     * Calculate change in user ELO based on matches played in tournament
+     * Uses a development coefficient, depending on the user's match history
      * 
      * @param matches List of matches to consider
      * @param user User object
      * @return User's new ELO
      */
-    public Integer calculateELO(List<Match> matches, User user) {
-        Integer userELO = user.getELO();
-        Integer developmentCoefficient = getDevelopmentCoefficient(user);
-        Double changeInRating = 0.0;
+    public Integer calculateChangeInELO(List<Map<String, Double>> userExpectedActualScores, Integer developmentCoefficient) {
+        Double changeInELO = 0.0;
 
-        for (Match match : matches) {
-            // void match results as both users didnt play tgt
-            if (match.isBYE())
-                continue;
-
-            User opponent = match.getWhite().equals(user) ? match.getBlack() : match.getWhite();
-            Double expectedScore = calculateExpectedScore(userELO, opponent.getELO());
-            Double actualScore = getActualScore(match.getResult(), match.getWhite().equals(user) ? "white" : "black");
-            changeInRating += developmentCoefficient * (actualScore - expectedScore);
+        for (Map<String, Double> scoreMap : userExpectedActualScores) {
+            changeInELO += developmentCoefficient * (scoreMap.get("actual") - scoreMap.get("expected"));
         }
-        return (int) (changeInRating + 0.5) + userELO;
+
+        return (int) (changeInELO + 0.5);
     }
 
     /**
@@ -761,127 +827,103 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     /**
-     * Marks a tournament as finalized and saves its state.
+     * Get user's expected and actual score for matches played in tournament
      * 
-     * @param tournamentID The ID of the tournament to finalize.
-     * @return The finalized Tournament object.
+     * @param tournament Tournament object
+     * @param user User object
+     * @return List of maps of expected and actual scores
      */
-    private Tournament finalizeTournament(Long tournamentID) {
-        Tournament tournament = getTournament(tournamentID);
-        tournament.setCalculated(true);
-        tournaments.save(tournament);
-        return tournament;
-    }
-
-    /**
-     * Maps each user in the tournament to a list of CheaterbugEntity objects
-     * representing match data for analysis.
-     * 
-     * @param tournamentID The ID of the tournament.
-     * @param tournament   The tournament object.
-     * @return A map where each user is associated with a list of their match data
-     *         entities.
-     */
-    private Map<User, List<CheaterbugEntity>> mapUserEntities(Long tournamentID, Tournament tournament) {
-        Map<User, List<CheaterbugEntity>> userEntitiesMap = new HashMap<>();
-
-        for (User user : UTService.getPlayers(tournamentID)) {
-            List<Match> userMatches = getUserMatchesForTournament(user, tournament);
-            Integer newELO = calculateAndSetNewELO(user, userMatches);
-            userService.updateELO(user, newELO);
-
-            List<CheaterbugEntity> userEntities = createUserEntities(user, userMatches);
-            userEntitiesMap.put(user, userEntities);
-        }
-        return userEntitiesMap;
-    }
-
-    /**
-     * Retrieves all matches of a user within a specific tournament.
-     * 
-     * @param user       The user whose matches are being retrieved.
-     * @param tournament The tournament for which matches are filtered.
-     * @return A list of matches the user participated in within the tournament.
-     */
-    private List<Match> getUserMatchesForTournament(User user, Tournament tournament) {
-        return matchService.getUserMatches(user).stream()
+    private List<Map<String, Double>> getUserExpectedActualScoreInTournament(Tournament tournament, User user) {
+        List<Map<String, Double>> expectedActualScores = new ArrayList<>();
+        List<Match> matches = matchService.getUserMatches(user).stream()
                 .filter(match -> match.getTournament().equals(tournament))
                 .collect(Collectors.toList());
-    }
+        for (Match match : matches) {
+            // void match results as both users didnt play tgt
+            if (match.isBYE())
+                continue;
 
-    /**
-     * Calculates the new ELO for a user based on their matches and updates it.
-     * 
-     * @param user        The user whose ELO is being updated.
-     * @param userMatches The matches of the user.
-     * @return The newly calculated ELO for the user.
-     */
-    private Integer calculateAndSetNewELO(User user, List<Match> userMatches) {
-        Integer newELO = calculateELO(userMatches, user);
-        user.setELO(newELO);
-        return newELO;
-    }
-
-    /**
-     * Creates a list of CheaterbugEntity objects representing each match's
-     * expected and actual scores for analysis.
-     * 
-     * @param user        The user whose matches are being analyzed.
-     * @param userMatches The matches of the user.
-     * @return A list of CheaterbugEntity objects for each match of the user.
-     */
-    private List<CheaterbugEntity> createUserEntities(User user, List<Match> userMatches) {
-        List<CheaterbugEntity> userEntities = new ArrayList<>();
-        for (Match match : userMatches) {
-            User opponent = getOpponent(user, match);
-            double actualScore = getActualScore(match.getResult(), match.getWhite().equals(user) ? "white" : "black");
-            double expectedScore = calculateExpectedScore(user.getELO(), opponent.getELO());
-            userEntities.add(new CheaterbugEntity(expectedScore, actualScore));
+            expectedActualScores.add(getUserExpectedActualScoreInMatch(match, user));
         }
-        return userEntities;
+        return expectedActualScores;
     }
 
     /**
-     * Determines the opponent of a user in a given match.
+     * Calculate expected and actual score of user in match based on this formula
+     * https://en.wikipedia.org/wiki/Chess_rating_system#Linear_approximation
      * 
-     * @param user  The user whose opponent is being identified.
-     * @param match The match in which the user participated.
-     * @return The opponent of the user in the match.
+     * @param match Match object
+     * @param user User object
+     * @return Map of expected and actual score
      */
-    private User getOpponent(User user, Match match) {
-        return match.getWhite().equals(user) ? match.getBlack() : match.getWhite();
+    private Map<String, Double> getUserExpectedActualScoreInMatch(Match match, User user) {
+        final Double CLASS_INTERVAL = 200.0;
+        Map<String, Double> expectedActualScore = new HashMap<>();
+        User opponent = match.getWhite().equals(user) ? match.getBlack() : match.getWhite();
+        Double expectedScore = 1.0 / (1 + Math.pow(10, (opponent.getELO() - user.getELO()) / CLASS_INTERVAL));
+        Double actualScore = getActualScore(match.getResult(), match.getWhite().equals(user) ? "white" : "black");
+
+        expectedActualScore.put("expected", expectedScore);
+        expectedActualScore.put("actual", actualScore);
+        return expectedActualScore;
     }
 
     /**
-     * Analyzes each user's match data for suspicious activity using
-     * CheaterbugService.
+     * Flag users in tournament if suspicious performance detected
      * 
-     * @param userEntitiesMap A map of users to their match data entities.
-     * @param tournamentID    The ID of the tournament being analyzed.
-     * @param tournament      The tournament object.
+     * @param tournamentID Long
      */
-    private void analyzeUserEntities(Map<User, List<CheaterbugEntity>> userEntitiesMap, Long tournamentID,
-            Tournament tournament) {
-        for (Map.Entry<User, List<CheaterbugEntity>> entry : userEntitiesMap.entrySet()) {
-            User user = entry.getKey();
-            List<CheaterbugEntity> userEntities = entry.getValue();
-
-            CheaterbugResponse response = CheaterbugService.analyze(userEntities);
-            if (CheaterbugService.isSuspicious(response)) {
-                reportSuspiciousActivity(user, tournamentID, tournament);
+    @Override
+    public void flagSusUserPerformance(Long tournamentID) {
+        Tournament tournament = getTournament(tournamentID);
+        for (User user : UTService.getPlayers(tournamentID)) {
+            List<Map<String, Double>> userExpectedActualScores = getUserExpectedActualScoreInTournament(tournament, user);
+            if (!user.getUsername().equals("DEFAULT_BOT") && checkCheaterbug(userExpectedActualScores)) {
+                user.setSuspicious(true);
+                userService.updateSuspicious(user, true);
             }
         }
     }
 
     /**
-     * Logs suspicious activity detected for a user in a specific tournament.
+     * Use Cheaterbug API to check if user's expected vs actual scores are suspicious
      * 
-     * @param user         The user for whom suspicious activity is detected.
-     * @param tournamentID The ID of the tournament.
-     * @param tournament   The tournament object.
+     * @param userExpectedActualScores List of maps of expected and actual scores
      */
-    private void reportSuspiciousActivity(User user, Long tournamentID, Tournament tournament) {
-        System.out.println("Suspicious activity detected for user: " + user.getUsername() +
-                " in tournament ID: " + tournamentID + ", Title: " + tournament.getTitle());
+    public boolean checkCheaterbug(List<Map<String, Double>> userExpectedActualScores) {
+        List<CheaterbugEntity> cheaterbugEntities = new ArrayList<>();
+        for (Map<String, Double> scoreMap : userExpectedActualScores) {
+            cheaterbugEntities.add(new CheaterbugEntity(scoreMap.get("actual"), scoreMap.get("expected")));
+        }
+        return cheaterbugService.isSuspicious(cheaterbugService.analyze(cheaterbugEntities));
+    }
+
+    /**
+    * Delete User and all related UserTournament and Matches
+    *
+    * @param user to delete
+    */
+    @Override
+    @Transactional
+    public void deleteForUser(User tempUser) {
+        User user = userService.findByUsername(tempUser.getUsername());
+        System.out.println("DELETE For User: "+user.getUsername());
+        // Collect the UserTournament IDs to be deleted
+        List<UserTournament> userTournamentsToDelete = new ArrayList<>(user.getUserTournaments());
+
+        // Now iterate over the collected UserTournament list
+        for (UserTournament userTournament : userTournamentsToDelete) {
+            // Perform the deletion logic
+            withdrawUser(user,userTournament.getTournament().getId());
+        }
+
+        // Now delete the user matches
+        List<Match> matchesToDelete = new ArrayList<>(matchService.getUserMatches(user));
+        for (Match match : matchesToDelete) {
+            matchService.deleteMatch(match.getId());
+        }
+
+        // Now delete the user
+        userService.deleteByUsername(user.getUsername());
     }
 }

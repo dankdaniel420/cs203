@@ -1,4 +1,4 @@
-package csd.grp3.CheaterBugAPI;
+package csd.grp3.CheaterbugAPI;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMin;
@@ -10,14 +10,14 @@ import lombok.Setter;
 @Setter
 public class CheaterbugEntity {
 
+    @DecimalMin(value = "0.0", message = "Expected score must be between 0.0 and 1.0")
+    @DecimalMax(value = "1.0", message = "Expected score must be between 0.0 and 1.0")
+    private Double expectedScore;
+
     @NotNull(message = "Actual score must not be null")
     @DecimalMin(value = "0.0", message = "Actual score must be between 0.0 and 1.0")
     @DecimalMax(value = "1.0", message = "Actual score must be between 0.0 and 1.0")
     private Double actualScore;
-
-    @DecimalMin(value = "0.0", message = "Expected score must be between 0.0 and 1.0")
-    @DecimalMax(value = "1.0", message = "Expected score must be between 0.0 and 1.0")
-    private Double expectedScore;
 
     public CheaterbugEntity(Double actualScore, Double expectedScore) {
         this.actualScore = actualScore;

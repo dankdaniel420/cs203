@@ -1,5 +1,5 @@
 ### Register a new user
-POST http://localhost:8080/signup
+POST http://localhost:8080/register
 Content-Type: application/json
 
 {
@@ -9,7 +9,7 @@ Content-Type: application/json
 }
 
 ### Register a user with a duplicated username
-POST http://localhost:8080/signup
+POST http://localhost:8080/register
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ### Register a user with password too short
-POST http://localhost:8080/signup
+POST http://localhost:8080/register
 Content-Type: application/json
 
 {

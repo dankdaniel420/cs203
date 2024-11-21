@@ -1,4 +1,4 @@
-package csd.grp3.CheaterBugAPI;
+package csd.grp3.CheaterbugAPI;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -10,4 +10,5 @@ public interface UserService {
     String deleteByUsername(String username);
     void updateELO(User user, int ELO);
     List<User> listUsers();
+    void updateSuspicious(User user, boolean suspicious);
 }

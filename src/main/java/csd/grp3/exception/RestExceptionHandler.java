@@ -13,10 +13,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
 import csd.grp3.tournament.InvalidTournamentStatus;
-import csd.grp3.tournament.UserAlreadyRegisteredException;
 import csd.grp3.tournament.TournamentNotFoundException;
+import csd.grp3.tournament.UserAlreadyRegisteredException;
 import csd.grp3.tournament.UserNotRegisteredException;
+import csd.grp3.usertournament.UserTournamentNotFoundException;
 
 /**
  * Centralize exception handling in this class.
@@ -81,6 +83,14 @@ public class RestExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("error", ex.getClass().getSimpleName());
         body.put("message", "Tournament not found with ID: " + ex.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserTournamentNotFoundException.class)
+    public ResponseEntity<Object> handle(UserTournamentNotFoundException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", ex.getClass().getSimpleName());
+        body.put("message", ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 

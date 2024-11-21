@@ -245,8 +245,6 @@ public class TournamentControllerTest {
     @Test
     public void testGetStandings() {
         Long tournamentId = 1L;
-        List<User> mockUsers = List.of(new User("user1", "password1", "ROLE_PLAYER", 0),
-                new User("user2", "password2", "ROLE_PLAYER", 0));
 
         List<User> tournamentUsers = List.of(new User("user1", "password1", "ROLE_PLAYER", 0),
                 new User("user2", "password2", "ROLE_PLAYER", 0),
@@ -262,7 +260,7 @@ public class TournamentControllerTest {
 
         // Verify the response status and the body
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockUsers, response.getBody());
+        assertEquals(tournamentUsers, response.getBody());
     }
 
     @Test

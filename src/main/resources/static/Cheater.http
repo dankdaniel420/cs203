@@ -1,0 +1,14 @@
+PUT https://localhost:8443/user/flag
+Content-Type: application/json
+
+{
+    "username": "User120"
+}
+
+### Delete User - success
+DELETE https://localhost:8443/tournaments/user
+Content-Type: application/json
+    
+{
+    "username": "User100"
+}

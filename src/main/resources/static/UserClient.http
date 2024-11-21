@@ -1,13 +1,5 @@
 ### get user details (only if logged in)
 GET http://localhost:8080/user
-Content-Type: application/json
-
-{
-
-    "username": "Admin",
-    "password": "password123",
-    "authorities": "ROLE_ADMIN"
-}
 
 ### Register a new user
 POST http://localhost:8080/signup
@@ -16,7 +8,7 @@ Content-Type: application/json
 {
     "username": "User1",
     "password": "user1234",
-    "authorities": "ROLE_ADMIN"
+    "authorities": "ROLE_USER"
 }
 
 ### Register a user with a duplicated username
@@ -62,9 +54,9 @@ POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-    "username": "User1",
+    "username": "User100",
     "password": "user1234",
-    "authorities": "ROLE_ADMIN"
+    "authorities": "ROLE_USER"
 }
 
 ### Login a user - password mismatch
@@ -89,7 +81,6 @@ Content-Type: application/json
 
 ### Get User Profile
 GET http://localhost:8080/profile/User1
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJVc2VyMSIsImlhdCI6MTczMDk0NjcwNCwiZXhwIjo2MjMxNDA4MTM3OTQ2MDAwfQ.akHHCG_9PsQKTIg03ST17xn91bRXvvHLwEU7NOAnupQ
 
 ### Get User Profile - not exist
 GET http://localhost:8080/profile/Usernotexist
@@ -133,8 +124,38 @@ Content-Type: application/json
     "authorities": "ROLE_USER"
 }
 
-### Delete User
-DELETE http://localhost:8080/profile/User1
+### Change Password - password too short
+PUT http://localhost:8080/user/changePassword
+Content-Type: application/json
+
+{
+    "username": "Usernotexist",
+    "password": "short",
+    "authorities": "ROLE_USER"
+}
+
+### Delete User - user not exist
+DELETE http://localhost:8080/user/delete
+Content-Type: application/json
+
+{
+    "username": "usernotexist",
+    "password": "newpassw",
+    "authorities": "ROLE_USER"
+}
+
+### Delete User - bad password
+DELETE http://localhost:8080/user/delete
+Content-Type: application/json
+
+{
+    "username": "User1",
+    "password": "badpassword",
+    "authorities": "ROLE_USER"
+}
+
+### Delete User 
+DELETE http://localhost:8080/user/delete
 Content-Type: application/json
 
 {
