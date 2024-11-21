@@ -1,38 +1,37 @@
 package csd.grp3.tournament;
 
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyChar;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import csd.grp3.CheaterBugAPI.CheaterbugResponse;
 import csd.grp3.CheaterBugAPI.CheaterbugService;
 import csd.grp3.match.Match;
 import csd.grp3.match.MatchRepository;
@@ -1173,4 +1172,126 @@ public class TournamentServiceImplTest {
         // Verify that the user's performance was flagged as suspicious
         assertTrue(user.isSuspicious());
     }
+    @Test
+    void testAddFromWaiting_AddsUsersFromWaitingListToPlayerList() {
+        // Arrange
+        Long tournamentID = 1L;
+        int numToAdd = 2;
+        Tournament tournament = new Tournament();
+        tournament.setId(tournamentID);
+
+        User user1 = new User("user1", "password1");
+        User user2 = new User("user2", "password2");
+        List<User> waitingList = new ArrayList<>(List.of(user1, user2));
+
+        when(userTournamentService.getWaitingList(tournamentID)).thenReturn(waitingList);
+
+        // Act
+        tournamentService.addFromWaiting(tournamentID, numToAdd);
+
+        // Assert
+        verify(userTournamentService, times(1)).updatePlayerStatus(tournamentID, user1.getUsername(), 'r');
+        verify(userTournamentService, times(1)).updatePlayerStatus(tournamentID, user2.getUsername(), 'r');
+    }
+
+    @Test
+    void testHandleDesperateUser_ReturnsFirstUnpairedUser() {
+        // Arrange
+        User desperateUser = new User("desperateUser", "password");
+        User unpairedUser = new User("unpairedUser", "password");
+        List<User> users = new ArrayList<>(List.of(desperateUser, unpairedUser));
+        Set<User> pairedUsers = new HashSet<>();
+
+        // Act
+        User result = tournamentService.handleDesperateUser(desperateUser, users, pairedUsers);
+
+        // Assert
+        assertEquals(unpairedUser, result);
+    }
+
+    @Test
+    void testHandleDesperateUser_ReturnsDefaultBotWhenNoUnpairedUser() {
+        // Arrange
+        User desperateUser = new User("desperateUser", "password");
+        User defaultBot = new User("DEFAULT_BOT", "password");
+        List<User> users = new ArrayList<>(List.of(desperateUser));
+        Set<User> pairedUsers = new HashSet<>();
+
+        when(userService.findByUsername("DEFAULT_BOT")).thenReturn(defaultBot);
+
+        // Act
+        User result = tournamentService.handleDesperateUser(desperateUser, users, pairedUsers);
+
+        // Assert
+        assertEquals(defaultBot, result);
+    }
+
+    // @Test
+    // void testGetHistoryByUser_ReturnsListOfTournaments() {
+    //     // Arrange
+    //     String username = "testUser";
+    //     User user = new User(username, "password");
+    //     Tournament tournament1 = Mockito.spy(new Tournament());
+    //     Tournament tournament2 = Mockito.spy(new Tournament());
+    //     UserTournament ut1 = new UserTournament(new UserTournamentId(1L, username), tournament1, user, 'r', 0, 0);
+    //     UserTournament ut2 = new UserTournament(new UserTournamentId(2L, username), tournament2, user, 'r', 0, 0);
+    //     user.getUserTournaments().add(ut1);
+    //     user.getUserTournaments().add(ut2);
+
+    //     when(tournament1.isOver()).thenReturn(true);
+    //     when(tournament2.isOver()).thenReturn(false);
+    //     when(userService.findByUsername(username)).thenReturn(user);
+
+    //     // Act
+    //     List<Tournament> result = tournamentService.getHistoryByUser(username);
+
+    //     // Assert
+    //     assertNotNull(result);
+    //     assertEquals(1, result.size());
+    //     assertTrue(result.contains(tournament1));
+    //     assertFalse(result.contains(tournament2));
+    // }
+
+    // @Test
+    // void testDeleteForUser_DeletesUserAndRelatedEntities() {
+    //         // Arrange
+    //         String username = "testUser";
+    //         User user = new User(username, "password");
+    //         Tournament tournament = new Tournament();
+    //         tournament.setId(1L);
+    //         UserTournament ut = new UserTournament(new UserTournamentId(1L, username), tournament, user, 'r', 0, 0);
+    //         user.getUserTournaments().add(ut);
+    //         Match match = new Match(user, new User("opponent", "password"), new Round(tournament));
+
+    //         when(userService.findByUsername(username)).thenReturn(user);
+    //         when(matchService.getUserMatches(user)).thenReturn(List.of(match));
+
+    //         // Act
+    //         tournamentService.deleteForUser(user);
+
+    //         // Assert
+    //         verify(userTournamentService, times(1)).delete(tournament, user);
+    //         verify(matchService, times(1)).deleteMatch(match.getId());
+    //         verify(userService, times(1)).deleteByUsername(username);
+    // }
+
+    // @Test
+    // void testHandleOddUser_AssignsDefaultBotToOddUser() {
+    //     // Arrange
+    //     Round round = new Round();
+    //     User oddUser = new User("oddUser", "password");
+    //     User defaultBot = new User("DEFAULT_BOT", "password");
+
+    //     when(userService.findByUsername("DEFAULT_BOT")).thenReturn(defaultBot);
+
+    //     // Act
+    //     Match result = tournamentService.handleOddUser(oddUser, round);
+
+    //     // Assert
+    //     assertNotNull(result);
+    //     assertEquals(oddUser, result.getWhite());
+    //     assertEquals(defaultBot, result.getBlack());
+    //     assertTrue(result.isBYE());
+    //     assertEquals(1.0, result.getResult());
+    // }
 }

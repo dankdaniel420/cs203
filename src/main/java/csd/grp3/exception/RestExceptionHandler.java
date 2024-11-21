@@ -13,9 +13,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
 import csd.grp3.tournament.InvalidTournamentStatus;
-import csd.grp3.tournament.UserAlreadyRegisteredException;
 import csd.grp3.tournament.TournamentNotFoundException;
+import csd.grp3.tournament.UserAlreadyRegisteredException;
 import csd.grp3.tournament.UserNotRegisteredException;
 import csd.grp3.usertournament.UserTournamentNotFoundException;
 

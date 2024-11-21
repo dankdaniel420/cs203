@@ -149,7 +149,7 @@ public class TournamentServiceImpl implements TournamentService {
      * @param tournamentID Long
      * @param numToAdd int
      */
-    private void addFromWaiting(Long tournamentID, int numToAdd) {
+    public void addFromWaiting(Long tournamentID, int numToAdd) {
         // invite players from waiting list
         Iterator<User> waitingUsers = UTService.getWaitingList(tournamentID).iterator();
 
@@ -574,7 +574,7 @@ public class TournamentServiceImpl implements TournamentService {
      * @param round Round object
      * @return Match object with BYE
      */
-    private Match handleOddUser(User oddUser, Round round) {
+    public Match handleOddUser(User oddUser, Round round) {
         Match newPair = createMatchWithUserColour(oddUser, "white", userService.findByUsername("DEFAULT_BOT"), round);
         newPair.setResult(1.0);
         newPair.setBYE(true);
@@ -589,7 +589,7 @@ public class TournamentServiceImpl implements TournamentService {
      * @param pairedUsers Set of paired users
      * @return First unpaired user that is also not user itself, else default bot
      */
-    private User handleDesperateUser(User desperateUser, List<User> users, Set<User> pairedUsers) {
+    public User handleDesperateUser(User desperateUser, List<User> users, Set<User> pairedUsers) {
         for (User user : users) {
             if (!pairedUsers.contains(user) && !user.equals(desperateUser)) {
                 return user;
