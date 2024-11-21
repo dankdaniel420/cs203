@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -81,7 +82,7 @@ public class TournamentServiceImpl implements TournamentService {
 
     /**
      * Update tournament specified by tournamentID and save it to repository
-     *  
+     * 
      * @param tournamentID Long ID of tournament object to be updated
      * @param newTournamentInfo Tournament object with updated details
      * @return Tournamnet object updated
@@ -109,7 +110,7 @@ public class TournamentServiceImpl implements TournamentService {
     /**
      * Removes users from tournament players and waiting list to fit min max ELO range
      * 
-     * @param tournament Tournament object 
+     * @param tournament Tournament object
      */
     private void updateTournamentEloRange(Tournament tournament) {
         List<User> users = UTService.getPlayers(tournament.getId());
@@ -221,7 +222,7 @@ public class TournamentServiceImpl implements TournamentService {
      * Else add user to either player list or waiting list
      * 
      * @param tempUser User object to be registered
-     * @param tournamentID Long 
+     * @param tournamentID Long
      */
     @Override
     @Transactional
@@ -240,18 +241,18 @@ public class TournamentServiceImpl implements TournamentService {
             // if tournament is full, we add to waiting list instead
             if (playerList.size() == tournament.getSize()) {
                 UTService.add(tournament, user, 'w');
-                // else, we want to add to player list 
+                // else, we want to add to player list
             } else {
                 UTService.add(tournament, user, 'r');
             }
         }
     }
-    
+
     /**
      * Removes user from tournament player list or waiting list
      * 
      * @param tempUser User object to be withdrawn
-     * @param tournamentID Long 
+     * @param tournamentID Long
      */
     @Override
     @Transactional
@@ -288,7 +289,7 @@ public class TournamentServiceImpl implements TournamentService {
     /**
      * Adds a new round to the tournament
      * 
-     * @param tournamentID Long 
+     * @param tournamentID Long
      */
     @Override
     @Transactional
@@ -326,8 +327,8 @@ public class TournamentServiceImpl implements TournamentService {
         Tournament tournament = round.getTournament();
 
         round.getMatches().stream()
-            .filter(match -> match.getResult() != 0)
-            .forEach(match -> updatePlayerPoints(tournament.getId(), match));
+                .filter(match -> match.getResult() != 0)
+                .forEach(match -> updatePlayerPoints(tournament.getId(), match));
     }
 
     /**
@@ -343,10 +344,10 @@ public class TournamentServiceImpl implements TournamentService {
             -1.0, new double[]{0.0, 1.0},  // Black wins
              0.5, new double[]{0.5, 0.5}   // Draw
         );
-    
+
         double result = match.getResult();
         double[] points = resultPoints.get(result);
-    
+
         UTService.updateMatchPoints(tournamentId, match.getWhite().getUsername(), points[0]);
         UTService.updateMatchPoints(tournamentId, match.getBlack().getUsername(), points[1]);
     }
@@ -499,7 +500,7 @@ public class TournamentServiceImpl implements TournamentService {
     /**
      * Get list of users sorted in order of by game points, buchholz score, and ELO
      * 
-     * @param tournamentID Long 
+     * @param tournamentID Long
      * @return List of sorted users
      */
     @Override
@@ -681,10 +682,10 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     /**
-     * Iterates through players and all their matches played in tournament.
-     * calls calculateELO() to calculate new ELO for each player.
+     * Ends a tournament by finalizing it, calculating new ELO scores for users,
+     * and analyzing match data for suspicious activity.
      * 
-     * @param tournamentID Long
+     * @param tournamentID The ID of the tournament to end.
      */
     @Override
     public void endTournament(Long tournamentID) {
@@ -766,8 +767,8 @@ public class TournamentServiceImpl implements TournamentService {
      */
     private Double getActualScore(double result, String userColour) {
         return result == 1.0 ? (userColour.equals("white") ? 1.0 : 0.0) // case if result is 1
-                    : result == -1 ? (userColour.equals("white") ? 0.0 : 1.0) // case if result is -1
-                    : 0.5;
+                : result == -1 ? (userColour.equals("white") ? 0.0 : 1.0) // case if result is -1
+                        : 0.5;
     }
 
     /**
@@ -794,6 +795,19 @@ public class TournamentServiceImpl implements TournamentService {
         }
         return DEFAULT_COEFFICIENT;
     }
+
+    /**
+     * Calculate expected score of user based on ELO difference
+     * 
+     * @param userELO     Integer
+     * @param opponentELO Integer
+     * @return Double expected score
+     */
+    private Double calculateExpectedScore(Integer userELO, Integer opponentELO) {
+        Double classInterval = 50.0;
+        return 1.0 / (1 + Math.pow(10, (opponentELO - userELO) / classInterval));
+    }
+
     /**
      * Get tournament history of user
      * 
