@@ -1,4 +1,4 @@
-package csd.grp3.CheaterBugAPITest;
+package csd.grp3.CheaterbugAPITest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
@@ -14,11 +14,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import csd.grp3.CheaterbugAPI.*;
+
 import org.springframework.http.HttpStatus;
-import csd.grp3.CheaterBugAPI.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CheaterBugControllerTest {
+public class CheaterbugControllerTest {
 
     @Mock
     private CheaterbugService cheaterbugService;

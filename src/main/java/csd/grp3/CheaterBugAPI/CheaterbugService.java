@@ -1,4 +1,4 @@
-package csd.grp3.CheaterBugAPI;
+package csd.grp3.CheaterbugAPI;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;

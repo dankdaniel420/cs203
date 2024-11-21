@@ -1,4 +1,4 @@
-package csd.grp3.CheaterBugAPITest;
+package csd.grp3.CheaterbugAPITest;
 
 import java.util.List;
 
@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import csd.grp3.CheaterBugAPI.CheaterbugEntity;
-import csd.grp3.CheaterBugAPI.CheaterbugResponse;
-import csd.grp3.CheaterBugAPI.CheaterbugService;
+import csd.grp3.CheaterbugAPI.CheaterbugEntity;
+import csd.grp3.CheaterbugAPI.CheaterbugResponse;
+import csd.grp3.CheaterbugAPI.CheaterbugService;
 import csd.grp3.user.User;
 
 @SpringBootTest

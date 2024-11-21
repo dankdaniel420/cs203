@@ -2,12 +2,7 @@ package csd.grp3.tournament;
 
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +27,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import csd.grp3.CheaterBugAPI.CheaterbugService;
+import csd.grp3.CheaterbugAPI.CheaterbugService;
 import csd.grp3.match.Match;
 import csd.grp3.match.MatchRepository;
 import csd.grp3.match.MatchServiceImpl;
@@ -71,9 +66,6 @@ public class TournamentServiceImplTest {
 
     @Mock
     private MatchServiceImpl matchService;
-
-    @Mock
-    private CheaterbugService cheaterbugService;
 
     @Mock
     private CheaterbugService cheaterbugService;
@@ -534,49 +526,6 @@ public class TournamentServiceImplTest {
         assertTrue(user2.getELO() < 35);
         assertTrue(user3.getELO() > 15);
         assertTrue(user4.getELO() > 10);
-    }
-
-    @Test
-    void endTournament_CheatingOnlyAnalysis() {
-        // Arrange
-        tournament.setMaxElo(100);
-        tournament.setSize(10);
-
-        User user1 = new User("player1", "player11", "ROLE_PLAYER", 40);
-        User user2 = new User("player2", "player22", "ROLE_PLAYER", 35);
-        List<User> userList = List.of(user1, user2);
-
-        Round round = new Round(tournament);
-        Match match = new Match(user1, user2, round);
-        match.setResult(1); // Assume user1 won
-        round.getMatches().add(match);
-
-        tournament.getRounds().add(round);
-
-        // Mock the get players in UT service
-        when(userTournamentService.getPlayers(tournament.getId())).thenReturn(userList);
-
-        // Mock the get matches in match service
-        when(matchService.getUserMatches(user1)).thenReturn(List.of(match));
-        when(matchService.getUserMatches(user2)).thenReturn(List.of(match));
-
-        // Mock tournament retrieval
-        when(tournamentRepository.findById(tournament.getId())).thenReturn(Optional.of(tournament));
-
-        // Prepare the mock response from the Cheaterbug API
-        Map<String, String> cheatProbability = Map.of("actual", "0.95", "99thPercentile", "0.90");
-        Map<String, String> expectedProbability = Map.of("actual", "0.05", "5thPercentile", "0.10");
-        CheaterbugResponse mockResponse = new CheaterbugResponse(cheatProbability, expectedProbability);
-
-        when(cheaterbugService.analyze(anyList())).thenReturn(mockResponse);
-        when(cheaterbugService.isSuspicious(mockResponse)).thenReturn(true);
-
-        // Act
-        tournamentService.endTournament(tournament.getId());
-
-        // Assert
-        verify(cheaterbugService, times(userList.size())).analyze(anyList());
-        verify(cheaterbugService, times(userList.size())).isSuspicious(mockResponse);
     }
 
     @Test

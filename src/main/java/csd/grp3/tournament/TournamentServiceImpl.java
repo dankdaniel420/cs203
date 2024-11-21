@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import csd.grp3.CheaterBugAPI.CheaterbugEntity;
-import csd.grp3.CheaterBugAPI.CheaterbugService;
+import csd.grp3.CheaterbugAPI.CheaterbugEntity;
+import csd.grp3.CheaterbugAPI.CheaterbugService;
 import csd.grp3.match.Match;
 import csd.grp3.match.MatchService;
 import csd.grp3.round.Round;
