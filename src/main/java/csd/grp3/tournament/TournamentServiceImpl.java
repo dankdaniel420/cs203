@@ -884,6 +884,11 @@ public class TournamentServiceImpl implements TournamentService {
         return cheaterbugService.isSuspicious(cheaterbugService.analyze(cheaterbugEntities));
     }
 
+    /**
+    * Delete User and all related UserTournament and Matches
+    *
+    * @param user to delete
+    */
     @Override
     @Transactional
     public void deleteForUser(User tempUser) {
@@ -894,10 +899,8 @@ public class TournamentServiceImpl implements TournamentService {
 
         // Now iterate over the collected UserTournament list
         for (UserTournament userTournament : userTournamentsToDelete) {
-            // Perform the deletion logic, which may include setting the tournament
-            System.out.println("Withdraw from tourn id; "+userTournament.getTournament().getId());
+            // Perform the deletion logic
             withdrawUser(user,userTournament.getTournament().getId());
-            // UTService.delete(userTournament.getTournament(), userTournament.getUser()); // Adjust according to your service
         }
 
         // Now delete the user matches
@@ -906,6 +909,7 @@ public class TournamentServiceImpl implements TournamentService {
             matchService.deleteMatch(match.getId());
         }
 
+        // Now delete the user
         userService.deleteByUsername(user.getUsername());
     }
 }
