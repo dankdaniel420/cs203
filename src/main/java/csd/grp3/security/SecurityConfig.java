@@ -78,9 +78,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authz) -> authz
                         // Open Access for all
                         .requestMatchers(HttpMethod.POST, "/signup", "/login").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/user/flag").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/profile/*").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/tournaments/user").permitAll()
 
                         // Admin-only access
                         .requestMatchers(HttpMethod.GET, "/tournaments").hasRole("ADMIN")
@@ -88,6 +85,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/tournaments/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/matches").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/tournaments/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/user/flag").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/tournaments/user").hasRole("ADMIN")
 
                         // User-only access
                         .requestMatchers(HttpMethod.PUT, "/user").hasRole("USER")
