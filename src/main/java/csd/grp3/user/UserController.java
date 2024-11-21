@@ -73,10 +73,4 @@ public class UserController {
         userService.updateSuspicious(user, false);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-
-    @DeleteMapping("/profile/{username}")
-    public ResponseEntity<HttpStatus> deleteUser(@PathVariable String username) {
-        userService.deleteByUsername(username);
-        return ResponseEntity.noContent().build();
-    }
 }
