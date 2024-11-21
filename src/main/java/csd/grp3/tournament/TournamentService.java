@@ -29,4 +29,5 @@ public interface TournamentService {
     List<User> getSortedUsers(Long id);
     List<Tournament> getHistoryByUser(String username);
     void flagSusUserPerformance(Long id);
+    void deleteForUser(User user);
 }

@@ -1,5 +1,6 @@
 package csd.grp3.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,15 +23,20 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import csd.grp3.jwt.JwtFilter;
 import csd.grp3.user.CustomUserDetailsService;
-import lombok.AllArgsConstructor;
 
 @EnableWebSecurity
 @Configuration
-@AllArgsConstructor
 public class SecurityConfig {
 
+    @Autowired
     private CustomUserDetailsService userDetailsService;
+
+    @Autowired
     private JwtFilter jwtFilter;
+
+    public SecurityConfig(CustomUserDetailsService userDetailsSvc) {
+        this.userDetailsService = userDetailsSvc;
+    }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -72,6 +78,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authz) -> authz
                         // Open Access for all
                         .requestMatchers(HttpMethod.POST, "/signup", "/login").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/user/flag").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/profile/*").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/tournaments/user").permitAll()
 
                         // Admin-only access
                         .requestMatchers(HttpMethod.GET, "/tournaments").hasRole("ADMIN")

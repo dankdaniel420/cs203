@@ -1,5 +1,6 @@
 package csd.grp3.user;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import csd.grp3.jwt.JwtService;
+import csd.grp3.match.Match;
+import csd.grp3.match.MatchService;
+import csd.grp3.tournament.TournamentService;
+import csd.grp3.usertournament.UserTournament;
+import csd.grp3.usertournament.UserTournamentService;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -29,6 +35,15 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private JwtService jwtService;
+
+    // @Autowired
+    // private UserTournamentService UTService;
+
+    // @Autowired
+    // private MatchService matchService;
+
+    // @Autowired
+    // private TournamentService tournamentService;
 
     /**
      * This method is used to find a user by their username
@@ -130,6 +145,23 @@ public class UserServiceImpl implements UserService {
      */
     public String deleteByUsername(String username) {
         User user = findByUsername(username);
+        // Collect the UserTournament IDs to be deleted
+        // List<UserTournament> userTournamentsToDelete = new ArrayList<>(user.getUserTournaments());
+
+        // Now iterate over the collected UserTournament list
+        // for (UserTournament userTournament : userTournamentsToDelete) {
+            // Perform the deletion logic, which may include setting the tournament
+            // tournamentService.withdrawUser(user,userTournament.getTournament().getId());
+            // UTService.delete(userTournament.getTournament(), userTournament.getUser()); // Adjust according to your service
+        // }
+
+        // // Now delete the user matches
+        // List<Match> matchesToDelete = new ArrayList<>(matchService.getUserMatches(user));
+        // for (Match match : matchesToDelete) {
+        //     matchService.deleteMatch(match.getId());
+        // }
+
+        // Now delete the tournament
         userRepository.delete(user);
         return username;
     }

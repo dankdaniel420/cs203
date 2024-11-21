@@ -13,7 +13,8 @@ Content-Type: application/json
     "minElo": 10,
     "maxElo": 100,
     "date": "2024-10-15T15:30:00",
-    "size": 3
+    "size": 3,
+    "totalRounds":2
 }
 
 ### add tounr - min > max

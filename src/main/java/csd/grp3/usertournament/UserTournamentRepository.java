@@ -15,6 +15,7 @@ public interface UserTournamentRepository extends JpaRepository<UserTournament, 
     List<User> findUsersByTournamentId(Long tournamentId);
 
     Optional<UserTournament> findById_TournamentIdAndId_Username(Long tournamentId, String username);
+    
     @Query("SELECT ut.user FROM UserTournament ut WHERE ut.id.tournamentId = :tournamentId AND ut.status = 'r'")
     List<User> findRegisteredUsersByTournamentId(@Param("tournamentId") Long tournamentId);
     
@@ -22,5 +23,4 @@ public interface UserTournamentRepository extends JpaRepository<UserTournament, 
     List<User> findWaitlistUsersByTournamentId(@Param("tournamentId") Long tournamentId);
     
     void deleteById_TournamentIdAndId_Username(Long tournamentId, String username);
-
 }

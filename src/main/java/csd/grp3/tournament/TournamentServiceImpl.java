@@ -61,6 +61,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public Tournament addTournament(Tournament newTournamentInfo) {
+        newTournamentInfo.setSize(newTournamentInfo.getSize() + 1); // space for bot
         tournaments.save(newTournamentInfo);
         registerUser(userService.findByUsername("DEFAULT_BOT"), newTournamentInfo.getId());
         return newTournamentInfo;
@@ -99,7 +100,7 @@ public class TournamentServiceImpl implements TournamentService {
         updateTournamentEloRange(tournament);
 
         // update player and waiting list based on new size
-        tournament.setSize(newTournamentInfo.getSize());
+        tournament.setSize(newTournamentInfo.getSize() + 1); // space for bot
         updateTournamentSize(tournament);
 
         return tournaments.save(tournament);
@@ -268,9 +269,10 @@ public class TournamentServiceImpl implements TournamentService {
             UTService.updatePlayerStatus(tournamentID, user.getUsername(), 'b');
             List<Round> rounds = tournament.getRounds();
             handleBYE(rounds.get(rounds.size() - 1), user); // give opp win for current round
-            if (UTService.getPlayers(tournamentID).size() < 3) {
+            if (UTService.getPlayers(tournamentID).size() < 2) {
                 endTournament(tournamentID);
             }
+            UTService.delete(tournament, user);
             return;
         }
 
@@ -525,6 +527,7 @@ public class TournamentServiceImpl implements TournamentService {
 
         for (int i = 0; i < users.size(); i++) {
             User user1 = users.get(i);
+            User user2 = null;
 
             if (pairedUsers.contains(user1))
                 continue;
@@ -534,57 +537,65 @@ public class TournamentServiceImpl implements TournamentService {
             boolean isUser1White = isNextColourWhite(user1, tournament);
 
             for (int j = i + 1; j < users.size(); j++) {
-                User user2 = users.get(j);
+                user2 = users.get(j);
 
-                if (j == users.size() - 1) {
-                    if (pairedUsers.contains(user2)) {
-                        for (int k = i + 1; k < users.size(); k++) {
-                            User desperateUser = users.get(k);
-                            if (!pairedUsers.contains(desperateUser)) {
-                                Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", desperateUser, round);
-                                matches.add(newPair);
-                                pairedUsers.add(user1);
-                                pairedUsers.add(desperateUser);
-                                break;
-                            }
-                        }
-                    } else {
-                        Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", user2, round);
-                        matches.add(newPair);
-                        pairedUsers.add(user1);
-                        pairedUsers.add(user2);
-                    }
+                if (pairedUsers.contains(user2)
+                    || !directEncounterResultInTournament(tournament, user1, user2).equals("no direct encounter")
+                    || !isColourSuitable(user2, tournament, isUser1White ? "black" : "white"))
+                    continue;
+                else {
+                    // if here means user2 fulfils criteria, hence break
                     break;
                 }
-
-                if (pairedUsers.contains(user2))
-                    continue;
-
-                // check if users have not played each other in tournament
-                if (!directEncounterResultInTournament(tournament, user1, user2).equals("no direct encounter"))
-                    continue;
-
-                // check if user2 can be assigned colour
-                if (!isColourSuitable(user2, tournament, isUser1White ? "black" : "white"))
-                    continue;
-
-                Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", user2, round);
-                matches.add(newPair);
-                pairedUsers.add(user1);
-                pairedUsers.add(user2);
-                break;
             }
+
+            // handle desperate user - no suitable user2
+            if (user2 == null)
+                user2 = handleDesperateUser(user1, users, pairedUsers);
+
+            Match newPair = createMatchWithUserColour(user1, isUser1White ? "white" : "black", user2, round);
+            matches.add(newPair);
+            pairedUsers.add(user1);
+            pairedUsers.add(user2);
         }
 
-        //handle odd
+        // handle odd number of players (remainding user)
         users.removeAll(pairedUsers);
         if (users.size() != 0) {
-            User oddUser = users.get(0);
-            Match newPair = createMatchWithUserColour(oddUser, "white", userService.findByUsername("DEFAULT_BOT"), round);
-            newPair.setResult(1.0);
-            newPair.setBYE(true);
-            matches.add(newPair);
+            matches.add(handleOddUser(users.get(0), round));
         }
+    }
+
+    /**
+     * Handles odd number of users in tournament
+     * Assigns leftover user with default bot
+     * 
+     * @param oddUser User object
+     * @param round Round object
+     * @return Match object with BYE
+     */
+    private Match handleOddUser(User oddUser, Round round) {
+        Match newPair = createMatchWithUserColour(oddUser, "white", userService.findByUsername("DEFAULT_BOT"), round);
+        newPair.setResult(1.0);
+        newPair.setBYE(true);
+        return newPair;
+    }
+
+    /**
+     * Handles desperate user who has no opponents to play with
+     * 
+     * @param desperateUser User object
+     * @param users List of users
+     * @param pairedUsers Set of paired users
+     * @return First unpaired user that is also not user itself, else default bot
+     */
+    private User handleDesperateUser(User desperateUser, List<User> users, Set<User> pairedUsers) {
+        for (User user : users) {
+            if (!pairedUsers.contains(user) && !user.equals(desperateUser)) {
+                return user;
+            }
+        }
+        return userService.findByUsername("DEFAULT_BOT");
     }
 
     /**
@@ -685,11 +696,9 @@ public class TournamentServiceImpl implements TournamentService {
         for (User user : UTService.getPlayers(tournamentID)) {
             eloChanges.put(user, calculateChangeInELO(getUserExpectedActualScoreInTournament(tournament, user), getDevelopmentCoefficient(user)));
         }
-        //catch cheaters
+        // catch cheaters 
         flagSusUserPerformance(tournamentID);
-
         updateUserEloMap(eloChanges);
-
     }
 
     private void updateUserEloMap(Map<User, Integer> eloChanges) {
@@ -717,6 +726,11 @@ public class TournamentServiceImpl implements TournamentService {
                 if (opponent.getUsername().equals("DEFAULT_BOT")) {
                     matches.remove(match);
                     break;
+                }
+                if (userColour.equals("black")) {
+                    match.setBlack(userService.findByUsername("DEFAULT_BOT"));
+                } else {
+                    match.setWhite(userService.findByUsername("DEFAULT_BOT"));
                 }
                 match.setResult(userColour.equals("black") ? 1 : -1);
                 match.setBYE(true);
@@ -810,7 +824,6 @@ public class TournamentServiceImpl implements TournamentService {
         List<Match> matches = matchService.getUserMatches(user).stream()
                 .filter(match -> match.getTournament().equals(tournament))
                 .collect(Collectors.toList());
-
         for (Match match : matches) {
             // void match results as both users didnt play tgt
             if (match.isBYE())
@@ -838,7 +851,6 @@ public class TournamentServiceImpl implements TournamentService {
 
         expectedActualScore.put("expected", expectedScore);
         expectedActualScore.put("actual", actualScore);
-
         return expectedActualScore;
     }
 
@@ -851,12 +863,8 @@ public class TournamentServiceImpl implements TournamentService {
     public void flagSusUserPerformance(Long tournamentID) {
         Tournament tournament = getTournament(tournamentID);
         for (User user : UTService.getPlayers(tournamentID)) {
-            if (user.getUsername().equals("DEFAULT_BOT")) {
-                continue;
-            }
-
             List<Map<String, Double>> userExpectedActualScores = getUserExpectedActualScoreInTournament(tournament, user);
-            if (checkCheaterbug(userExpectedActualScores)) {
+            if (!user.getUsername().equals("DEFAULT_BOT") && checkCheaterbug(userExpectedActualScores)) {
                 user.setSuspicious(true);
                 userService.updateSuspicious(user, true);
             }
@@ -873,10 +881,31 @@ public class TournamentServiceImpl implements TournamentService {
         for (Map<String, Double> scoreMap : userExpectedActualScores) {
             cheaterbugEntities.add(new CheaterbugEntity(scoreMap.get("actual"), scoreMap.get("expected")));
         }
-
-        System.out.println(cheaterbugEntities);
-        System.out.println(cheaterbugService.analyze(cheaterbugEntities));
-
         return cheaterbugService.isSuspicious(cheaterbugService.analyze(cheaterbugEntities));
+    }
+
+    @Override
+    @Transactional
+    public void deleteForUser(User tempUser) {
+        User user = userService.findByUsername(tempUser.getUsername());
+        System.out.println("DELETE For User: "+user.getUsername());
+        // Collect the UserTournament IDs to be deleted
+        List<UserTournament> userTournamentsToDelete = new ArrayList<>(user.getUserTournaments());
+
+        // Now iterate over the collected UserTournament list
+        for (UserTournament userTournament : userTournamentsToDelete) {
+            // Perform the deletion logic, which may include setting the tournament
+            System.out.println("Withdraw from tourn id; "+userTournament.getTournament().getId());
+            withdrawUser(user,userTournament.getTournament().getId());
+            // UTService.delete(userTournament.getTournament(), userTournament.getUser()); // Adjust according to your service
+        }
+
+        // Now delete the user matches
+        List<Match> matchesToDelete = new ArrayList<>(matchService.getUserMatches(user));
+        for (Match match : matchesToDelete) {
+            matchService.deleteMatch(match.getId());
+        }
+
+        userService.deleteByUsername(user.getUsername());
     }
 }

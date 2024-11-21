@@ -407,7 +407,7 @@ public class TournamentServiceImplTest {
         User user2 = new User("player2", "player22", "ROLE_PLAYER", 35);
         User user3 = new User("player3", "player33", "ROLE_PLAYER", 15);
         User user4 = new User("player4", "player44", "ROLE_PLAYER", 10);
-        List<User> userList = java.util.Arrays.asList(user1, user2, user3, user4);
+        List<User> userList = new ArrayList<>(List.of(user1, user2, user3, user4));
 
         when(userTournamentService.getPlayers(tournament.getId())).thenReturn(userList);
         when(tournamentRepository.findById(tournament.getId())).thenReturn(Optional.of(tournament));
@@ -441,7 +441,7 @@ public class TournamentServiceImplTest {
         User user2 = new User("player2", "player22", "ROLE_PLAYER", 35);
         User user3 = new User("player3", "player33", "ROLE_PLAYER", 15);
         User user4 = new User("player4", "player44", "ROLE_PLAYER", 10);
-        List<User> userList = java.util.Arrays.asList(user1, user2, user3, user4);
+        List<User> userList = new ArrayList<>(List.of(user1, user2, user3, user4));
 
         Round firstRound = new Round(tournament);
         Match match1 = new Match(user1, user2, firstRound);

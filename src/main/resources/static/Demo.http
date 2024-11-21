@@ -1,0 +1,39 @@
+# Register for tournament - wait list - check get
+POST http://localhost:8080/tournaments/1/user
+Content-Type: application/json
+
+{
+    "username": "User100",
+    "password": "user1234",
+    "authorities": "ROLE_USER"
+}
+
+### Register for tournament - wait list - check get
+POST  http://localhost:8080/tournaments/1/user
+Content-Type: application/json
+
+{
+    "username": "User110",
+    "password": "user1234",
+    "authorities": "ROLE_USER"
+}
+
+### Register for tournament - wait list - check get
+POST http://localhost:8080/tournaments/1/user
+Content-Type: application/json
+
+{
+    "username": "User120",
+    "password": "user1234",
+    "authorities": "ROLE_USER"
+}
+
+### Register for tournament - wait list - check get
+POST http://localhost:8080/tournaments/1/user
+Content-Type: application/json
+
+{
+    "username": "User150",
+    "password": "user1234",
+    "authorities": "ROLE_USER"
+}
